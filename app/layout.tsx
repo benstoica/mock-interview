@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Toaster } from "sonner";
 import { Mona_Sans } from "next/font/google";
 import "./globals.css";
 
@@ -18,8 +19,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang='en' className='dark'>
-      <body className={`${monaSans.className} antialiased`}>{children}</body>
+    <html lang="en" className="dark">
+      <body className={`${monaSans.className} pattern antialiased`}>
+        {children}
+        <Toaster />
+      </body>
     </html>
   );
 }

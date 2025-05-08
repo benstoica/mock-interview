@@ -8,16 +8,16 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 
-const page = async () => {
+const Page = async () => {
   const user = await getCurrentUser();
 
-  const [userInterviews, latestInterviews] = await Promise.all([
+  const [userInterviews, allInterviews] = await Promise.all([
     await getInterviewsByUserId(user?.id!),
     await getLatestInterviews({ userId: user?.id! }),
   ]);
 
-  const hasPastInterviews = userInterviews?.length > 0;
-  const hasUpcomingInterviews = latestInterviews?.length > 0;
+  const hasPastInterviews = userInterviews?.length! > 0;
+  const hasUpcomingInterviews = allInterviews?.length! > 0;
   return (
     <>
       <section className="card-cta">
@@ -44,7 +44,15 @@ const page = async () => {
         <div className="interviews-section">
           {hasPastInterviews ? (
             userInterviews?.map((interview) => (
-              <InterviewCard {...interview} key={interview.id} />
+              <InterviewCard
+                key={interview.id}
+                userId={user?.id}
+                id={interview.id}
+                role={interview.role}
+                type={interview.type}
+                techstack={interview.techstack}
+                createdAt={interview.createdAt}
+              />
             ))
           ) : (
             <p>You haven&pos;t taken any interviews yet.</p>
@@ -55,8 +63,16 @@ const page = async () => {
         <h2>Take an Interview</h2>
         <div className="interviews-section">
           {hasUpcomingInterviews ? (
-            latestInterviews?.map((interview) => (
-              <InterviewCard {...interview} key={interview.id} />
+            allInterviews?.map((interview) => (
+              <InterviewCard
+                key={interview.id}
+                userId={user?.id}
+                id={interview.id}
+                role={interview.role}
+                type={interview.type}
+                techstack={interview.techstack}
+                createdAt={interview.createdAt}
+              />
             ))
           ) : (
             <p>There are no new interviews available.</p>
@@ -67,4 +83,4 @@ const page = async () => {
   );
 };
 
-export default page;
+export default Page;

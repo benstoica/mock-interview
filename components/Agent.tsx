@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { vapi } from "@/lib/vapi.sdk";
 import { interviewer } from "@/constants";
+import { createFeedback } from "@/lib/actions/general.action";
 
 enum CallStatus {
   INACTIVE = "INACTIVE",
@@ -24,12 +25,14 @@ const Agent = (props: AgentProps) => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [callStatus, setCallStatus] = useState<CallStatus>(CallStatus.INACTIVE);
   const [messages, setMessages] = useState<SavedMessage[]>([]);
+  const [lastMessage, setLastMessage] = useState<string>("");
 
   useEffect(() => {
     const onCallStart = () => {
       setCallStatus(CallStatus.ACTIVE);
     };
     const OnCallEnd = () => setCallStatus(CallStatus.FINISHED);
+
     const onMessage = (message: Message) => {
       if (message.type === "transcript" && message.transcriptType === "final") {
         const newMessage = { role: message.role, content: message.transcript };
@@ -65,23 +68,26 @@ const Agent = (props: AgentProps) => {
     };
   }, []);
 
-  const handleGenerateFeedback = async (messages: SavedMessage[]) => {
-    console.log("Generate feedback here.");
+  useEffect(() => {
+    if (messages.length > 0) {
+      setLastMessage(messages[messages.length - 1].content);
+    }
 
-    const { success, id } = {
-      success: true,
-      id: "feedback-id",
+    const handleGenerateFeedback = async (messages: SavedMessage[]) => {
+      const { success, feedbackId: id } = await createFeedback({
+        interviewId: props.interviewId!,
+        userId: props.userId!,
+        transcript: messages,
+      });
+
+      if (success && id) {
+        router.push(`/interview/${props.interviewId}/feedback`);
+      } else {
+        console.log("Error creating feedback:");
+        router.push("/");
+      }
     };
 
-    if (success && id) {
-      router.push(`/interview/${props.interviewId}/feedback`);
-    } else {
-      console.error("Error generating feedback.");
-      router.push("/");
-    }
-  };
-
-  useEffect(() => {
     if (callStatus === CallStatus.FINISHED) {
       if (props.type === "generate") {
         router.push("/");
@@ -89,7 +95,14 @@ const Agent = (props: AgentProps) => {
         handleGenerateFeedback(messages);
       }
     }
-  }, [messages, callStatus, props.type, props.userId, router]);
+  }, [
+    messages,
+    callStatus,
+    props.interviewId,
+    props.type,
+    props.userId,
+    router,
+  ]);
 
   const handleCall = async () => {
     setCallStatus(CallStatus.CONNECTING);
@@ -125,7 +138,6 @@ const Agent = (props: AgentProps) => {
     vapi.stop();
   };
 
-  const latestMessage = messages[messages.length - 1]?.content;
   const isCallInactiveOrFinished =
     callStatus === CallStatus.INACTIVE || callStatus === CallStatus.FINISHED;
 
@@ -164,12 +176,12 @@ const Agent = (props: AgentProps) => {
         <div className="transcript-border">
           <div className="transcript">
             <p
-              key={latestMessage}
+              key={lastMessage}
               className={cn(
                 "transition-opacity duration-500 opacity-0",
                 "animate-fadeIn opacity-100"
               )}>
-              {latestMessage}
+              {lastMessage}
             </p>
           </div>
         </div>

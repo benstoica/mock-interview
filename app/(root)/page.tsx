@@ -1,11 +1,10 @@
 import InterviewCard from "@/components/InterviewCard";
 import { Button } from "@/components/ui/button";
-import { dummyInterviews } from "@/constants";
+import { getCurrentUser } from "@/lib/actions/auth.action";
 import {
-  getCurrentUser,
   getInterviewsByUserId,
   getLatestInterviews,
-} from "@/lib/actions/auth.action";
+} from "@/lib/actions/general.action";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -28,7 +27,7 @@ const page = async () => {
             Practice on real interview questions and get instant feedback.
           </p>
           <Button asChild className="btn-primary max-sm:w-full">
-            <Link href="/interview">Start an interview.</Link>
+            <Link href="/interview">Generate an interview.</Link>
           </Button>
         </div>
 

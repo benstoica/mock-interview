@@ -54,11 +54,11 @@ const InterviewCard = (props: InterviewCardProps) => {
             <Link
               href={
                 feedback
-                  ? `/interview/${props.interviewId}/feedback`
-                  : `/interview/${props.interviewId}`
-              }
-            />
-            {feedback ? "View Feedback" : "Start Interview"}
+                  ? `/interview/${props.id}/feedback`
+                  : `/interview/${props.id}`
+              }>
+              {feedback ? "View Feedback" : "Start Interview"}
+            </Link>
           </Button>
         </div>
       </div>

@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { vapi } from "@/lib/vapi.sdk";
+import { interviewer } from "@/constants";
 
 enum CallStatus {
   INACTIVE = "INACTIVE",
@@ -64,23 +65,60 @@ const Agent = (props: AgentProps) => {
     };
   }, []);
 
+  const handleGenerateFeedback = async (messages: SavedMessage[]) => {
+    console.log("Generate feedback here.");
+
+    const { success, id } = {
+      success: true,
+      id: "feedback-id",
+    };
+
+    if (success && id) {
+      router.push(`/interview/${props.interviewId}/feedback`);
+    } else {
+      console.error("Error generating feedback.");
+      router.push("/");
+    }
+  };
+
   useEffect(() => {
     if (callStatus === CallStatus.FINISHED) {
-      router.push("/");
+      if (props.type === "generate") {
+        router.push("/");
+      } else {
+        handleGenerateFeedback(messages);
+      }
     }
   }, [messages, callStatus, props.type, props.userId, router]);
 
   const handleCall = async () => {
     setCallStatus(CallStatus.CONNECTING);
 
-    await vapi.start(process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID, {
-      variableValues: {
-        username: props.userName,
-        userid: props.userId,
-      },
-      clientMessages: [],
-      serverMessages: [],
-    });
+    if (props.type === "generate") {
+      await vapi.start(process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID, {
+        variableValues: {
+          username: props.userName,
+          userid: props.userId,
+        },
+        clientMessages: [],
+        serverMessages: [],
+      });
+    } else {
+      let formattedQuestions = "";
+      if (props.questions) {
+        formattedQuestions = props.questions
+          .map((question) => `- ${question}`)
+          .join("\n");
+      }
+
+      await vapi.start(interviewer, {
+        variableValues: {
+          questions: formattedQuestions,
+        },
+        clientMessages: [],
+        serverMessages: [],
+      });
+    }
   };
   const handleDisconnect = () => {
     setCallStatus(CallStatus.FINISHED);
